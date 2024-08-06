@@ -24,7 +24,7 @@ data = [
     ("Help me with the weather forecast", "weather_query"),
     ("How hot is it in San Francisco?", "weather_query"),
     ("Food in San Jose", "restaurant_query"),
-    ("Restaurants in Pheonix", "restaurant_query"),
+    ("Restaurants in Phoenix", "restaurant_query"),
     ("Are there any restaurants in Baltimore?", "restaurant_query"),
     ("I wanna grab food in Detroit", "restaurant_query"),
     ("Places to eat in Austin", "restaurant_query"),
@@ -37,8 +37,52 @@ data = [
     ("Where to stay in Atlanta", "hotel_query"),
     ("Book a hotel in Dallas", "hotel_query"),
     ("Best hotels in Seattle", "hotel_query"),
-    ("Can you suggest a hotel in Las Vegas?", "hotel_query")
-    # Add more examples as needed
+    ("Can you suggest a hotel in Las Vegas?", "hotel_query"),
+    ("Show me places in Austin", "city_query"),
+    ("I need information about Seattle", "city_query"),
+    ("Tell me about places to visit in Denver", "city_query"),
+    ("What's happening in Portland?", "city_query"),
+    ("I’m looking for details about Orlando", "city_query"),
+    ("Give me info on Philadelphia", "city_query"),
+    ("What’s going on in Miami?", "city_query"),
+    ("I want to know about San Francisco", "city_query"),
+    ("Can you tell me about Boston?", "city_query"),
+    ("I’m interested in New Orleans", "city_query"),
+    ("What's the current weather in Boston?", "weather_query"),
+    ("How's the weather in New York City today?", "weather_query"),
+    ("Tell me the temperature in Denver", "weather_query"),
+    ("What's the forecast for Miami?", "weather_query"),
+    ("Can you give me the weather report for Chicago?", "weather_query"),
+    ("Is it raining in Seattle?", "weather_query"),
+    ("How cold is it in Minneapolis?", "weather_query"),
+    ("What's the humidity like in San Diego?", "weather_query"),
+    ("Tell me if it’s sunny in Las Vegas", "weather_query"),
+    ("What’s the weather in San Jose?", "weather_query"),
+    ("Where can I eat in Dallas?", "restaurant_query"),
+    ("Find me some good restaurants in San Diego", "restaurant_query"),
+    ("What are the top places to eat in Houston?", "restaurant_query"),
+    ("Any restaurant recommendations for Seattle?", "restaurant_query"),
+    ("Show me dining options in San Francisco", "restaurant_query"),
+    ("Are there any good eateries in Portland?", "restaurant_query"),
+    ("Where can I get food in Miami?", "restaurant_query"),
+    ("Best places to eat in Austin", "restaurant_query"),
+    ("Restaurant suggestions for New York City", "restaurant_query"),
+    ("Where should I dine in Chicago?", "restaurant_query"),
+    ("What are the best hotels in San Francisco?", "hotel_query"),
+    ("Find hotels in Seattle for me", "hotel_query"),
+    ("Where can I stay in Boston?", "hotel_query"),
+    ("Can you recommend hotels in Los Angeles?", "hotel_query"),
+    ("What’s a good place to stay in Miami?", "hotel_query"),
+    ("Show me hotel options in Dallas", "hotel_query"),
+    ("Find accommodation in San Diego", "hotel_query"),
+    ("Hotels available in New York City?", "hotel_query"),
+    ("Suggest a hotel in Denver", "hotel_query"),
+    ("Where can I book a hotel in Chicago?", "hotel_query"),
+    ("Where to stay in Las Vegas", "hotel_query"),
+    ("I want to visit a new city", "city_query"),
+    ("Tell me about the local weather", "weather_query"),
+    ("Where can I find places to eat?", "restaurant_query"),
+    ("Find me a place to stay", "hotel_query")
 ]
 
 X, y = zip(*data)
@@ -176,15 +220,18 @@ def get_hotels(location):
 def generate_response(intent, entities, user_response=None, follow_up_stage=0):
     if follow_up_stage == 1: 
         location = entities.get('GPE', 'unknown location')
-        weather_data = get_weather(location)
-        if weather_data:
-            description = weather_data['weather'][0]['description']
-            temp_kelvin = weather_data['main']['temp']
-            temp_fahrenheit = round((temp_kelvin - 273.15) * 9/5 + 32)
-            weather_response = f"The temperature in {location} is currently {temp_fahrenheit}°F with {description}."
-            return f"{weather_response} Would you like to see hotels in {location}? (yes/no)", 2
+        if user_response.lower() == "yes":
+            weather_data = get_weather(location)
+            if weather_data:
+                description = weather_data['weather'][0]['description']
+                temp_kelvin = weather_data['main']['temp']
+                temp_fahrenheit = round((temp_kelvin - 273.15) * 9/5 + 32)
+                weather_response = f"The temperature in {location} is currently {temp_fahrenheit}°F with {description}."
+                return f"{weather_response} Would you like to see hotels in {location}? (yes/no)", 2
+            else:
+                return "Sorry, I couldn't retrieve the weather information right now.", 0
         else:
-            return "Sorry, I couldn't retrieve the weather information right now.", 0
+            return f"Would you like to see hotels in {location}? (yes/no)", 2
 
     elif follow_up_stage == 2:  # After asking about hotels
         if user_response.lower() == "yes":
@@ -250,7 +297,6 @@ def generate_response(intent, entities, user_response=None, follow_up_stage=0):
     else:
         return "I'm not sure how to help with that.", 0
 
-# Updated chatbot function
 def chatbot():
     print("Hello! Where would you like to travel?")
     follow_up_stage = 0
@@ -271,6 +317,5 @@ def chatbot():
 
         print(f"Chatbot: {response}")
 
-# Run the chatbot
 if __name__ == "__main__":
     chatbot()
