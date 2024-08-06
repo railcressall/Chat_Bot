@@ -11,7 +11,6 @@ Original file is located at
 GEOPIFY_API_KEY = 'a3bb96df28d14c618173fbc519563824'
 OPENWEATHER_API_KEY = 'cb84bcfbcbd5a92415a0c484b57886c8'
 
-! pip install gradio
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -257,8 +256,7 @@ iface = gr.Interface(
         gr.Textbox(label="Hotels"),
         gr.Textbox(label="Model Accuracy")
     ],
-    theme="dark",
     title="Voyage Vibes"
 )
 
-iface.launch()
+iface.launch(share=True)
