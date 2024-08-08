@@ -2,91 +2,20 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
+from sklearn.metrics import classification_report, confusion_matrix
 import requests
 import spacy
+import pandas as pd
 
 from config import geoapify_key, open_weather_key
 
-data = [
-    ("I want to travel to Houston", "city_query"),
-    ("I wanna go to Salt Lake City", "city_query"),
-    ("I want to visit Chicago", "city_query"),
-    ("Oregon", "city_query"),
-    ("San Diego", "city_query"),
-    ("Boston", "city_query"),
-    ("Las Vegas", "city_query"),
-    ("Tucson", "city_query"),
-    ("El Paso", "city_query"),
-    ("Boise", "city_query"),
-    ("What's the weather like?", "weather_query"),
-    ("Can you tell me the weather in Chicago?", "weather_query"),
-    ("What's the temperature in Seattle?", "weather_query"),
-    ("Help me with the weather forecast", "weather_query"),
-    ("How hot is it in San Francisco?", "weather_query"),
-    ("Food in San Jose", "restaurant_query"),
-    ("Restaurants in Phoenix", "restaurant_query"),
-    ("Are there any restaurants in Baltimore?", "restaurant_query"),
-    ("I wanna grab food in Detroit", "restaurant_query"),
-    ("Places to eat in Austin", "restaurant_query"),
-    ("Hotels in New York City", "hotel_query"),
-    ("Where can I stay in Los Angeles?", "hotel_query"),
-    ("Find me a place to stay in Miami", "hotel_query"),
-    ("Accommodations in Orlando", "hotel_query"),
-    ("Are there any hotels in Denver?", "hotel_query"),
-    ("Looking for a hotel in Nashville", "hotel_query"),
-    ("Where to stay in Atlanta", "hotel_query"),
-    ("Book a hotel in Dallas", "hotel_query"),
-    ("Best hotels in Seattle", "hotel_query"),
-    ("Can you suggest a hotel in Las Vegas?", "hotel_query"),
-    ("Show me places in Austin", "city_query"),
-    ("I need information about Seattle", "city_query"),
-    ("Tell me about places to visit in Denver", "city_query"),
-    ("What's happening in Portland?", "city_query"),
-    ("I’m looking for details about Orlando", "city_query"),
-    ("Give me info on Philadelphia", "city_query"),
-    ("What’s going on in Miami?", "city_query"),
-    ("I want to know about San Francisco", "city_query"),
-    ("Can you tell me about Boston?", "city_query"),
-    ("I’m interested in New Orleans", "city_query"),
-    ("What's the current weather in Boston?", "weather_query"),
-    ("How's the weather in New York City today?", "weather_query"),
-    ("Tell me the temperature in Denver", "weather_query"),
-    ("What's the forecast for Miami?", "weather_query"),
-    ("Can you give me the weather report for Chicago?", "weather_query"),
-    ("Is it raining in Seattle?", "weather_query"),
-    ("How cold is it in Minneapolis?", "weather_query"),
-    ("What's the humidity like in San Diego?", "weather_query"),
-    ("Tell me if it’s sunny in Las Vegas", "weather_query"),
-    ("What’s the weather in San Jose?", "weather_query"),
-    ("Where can I eat in Dallas?", "restaurant_query"),
-    ("Find me some good restaurants in San Diego", "restaurant_query"),
-    ("What are the top places to eat in Houston?", "restaurant_query"),
-    ("Any restaurant recommendations for Seattle?", "restaurant_query"),
-    ("Show me dining options in San Francisco", "restaurant_query"),
-    ("Are there any good eateries in Portland?", "restaurant_query"),
-    ("Where can I get food in Miami?", "restaurant_query"),
-    ("Best places to eat in Austin", "restaurant_query"),
-    ("Restaurant suggestions for New York City", "restaurant_query"),
-    ("Where should I dine in Chicago?", "restaurant_query"),
-    ("What are the best hotels in San Francisco?", "hotel_query"),
-    ("Find hotels in Seattle for me", "hotel_query"),
-    ("Where can I stay in Boston?", "hotel_query"),
-    ("Can you recommend hotels in Los Angeles?", "hotel_query"),
-    ("What’s a good place to stay in Miami?", "hotel_query"),
-    ("Show me hotel options in Dallas", "hotel_query"),
-    ("Find accommodation in San Diego", "hotel_query"),
-    ("Hotels available in New York City?", "hotel_query"),
-    ("Suggest a hotel in Denver", "hotel_query"),
-    ("Where can I book a hotel in Chicago?", "hotel_query"),
-    ("Where to stay in Las Vegas", "hotel_query"),
-    ("I want to visit a new city", "city_query"),
-    ("Tell me about the local weather", "weather_query"),
-    ("Where can I find places to eat?", "restaurant_query"),
-    ("Find me a place to stay", "hotel_query")
-]
+csv_file = "Resources/queries.csv"
+df = pd.read_csv(csv_file)
 
-X, y = zip(*data)
+X = df['Query']
+y = df['Category']
 
+# Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Create a text classification pipeline
@@ -100,7 +29,21 @@ model.fit(X_train, y_train)
 
 # Evaluate the model
 accuracy = model.score(X_test, y_test)
-print(f"Model Accuracy: {accuracy * 100:.2f}%")
+print(f"Model accuracy: {accuracy:.2f}")
+
+# Predict the test set results
+y_pred = model.predict(X_test)
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix:")
+print(conf_matrix)
+
+# Classification Report
+class_report = classification_report(y_test, y_pred)
+print("Classification Report:")
+print(class_report)
+
 
 # Predict intent for a new sentence
 def predict_intent(user_input):
