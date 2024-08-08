@@ -11,8 +11,8 @@ The Voyage Vibes Chatbot is designed to provide users with essential travel info
 - User-Friendly Interface: Easy to use, with a clean and intuitive design powered by Gradio.
 
 ## APIs
-OpenWeatherMap API: Provides current weather information based on the user's input location.
-Geoapify API: Offers location-based services, including nearby hotel and restaurant recommendations.
+- OpenWeatherMap API: Provides current weather information based on the user's input location.
+- Geoapify API: Offers location-based services, including nearby hotel and restaurant recommendations.
 
 ## Usage
 After running the "Gradio_Chatbot" script, you'll be provided with a local URL. Click on that URL to open the Gradio interface in your web browser. From there, you can interact with the chatbot and receive weather updates and destination recommendations for your chosen travel location.
