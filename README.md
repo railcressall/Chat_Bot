@@ -2,7 +2,7 @@
 Project 4
 
 ## Project Overview
-The Voyage Vibes Chatbot is designed to provide users with essential travel information by simply entering their travel destination. It offers current weather, as well as recommendations for hotels and restaurants, helping users make informed decisions about their trip.
+The Voyage Vibes Chatbot is designed to provide users with essential travel information by simply entering their destination. It offers current weather information, along with recommendations for hotels and restaurants, helping users make well-informed decisions about their trip. The chatbot is trained using the 'queries.csv' file located in the 'Resources' folder. This file includes over 100 potential user queries, offering a comprehensive dataset to enhance the chatbot's accuracy and responsiveness.
 
 ## Features
 - Weather Information: Get the latest weather updates for your travel destination.
