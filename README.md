@@ -6,8 +6,8 @@ The Voyage Vibes Chatbot is designed to provide users with essential travel info
 
 ## Features
 - Weather Information: Get the latest weather updates for your travel destination.
-- Hotel Recommendations: Discover top-rated hotels in the area.
-- Restaurant Suggestions: Find popular restaurants nearby.
+- Hotel Recommendations: Discover hotels in the area.
+- Restaurant Suggestions: Find restaurants nearby.
 - User-Friendly Interface: Easy to use, with a clean and intuitive design powered by Gradio.
 
 ## APIs
