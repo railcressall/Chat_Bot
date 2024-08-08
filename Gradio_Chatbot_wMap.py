@@ -18,6 +18,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from config import geoapify_key, open_weather_key
 import pandas as pd
+import folium
 
 csv_file = "Resources/queries.csv"
 df = pd.read_csv(csv_file)
@@ -37,12 +38,12 @@ model.fit(X_train, y_train)
 accuracy = model.score(X_test, y_test)
 print(f"Model Accuracy: {accuracy * 100:.2f}%")
 
+# Load pre-trained spaCy model
+nlp = spacy.load('en_core_web_sm')
+
 def predict_intent(user_input):
     user_input = user_input.lower()
     return model.predict([user_input])[0]
-
-# Load pre-trained spaCy model
-nlp = spacy.load('en_core_web_sm')
 
 def extract_entities(user_input):
     doc = nlp(user_input)
@@ -131,6 +132,35 @@ def get_hotels(location):
     else:
         print(f"Response JSON: {response.json()}")
         return [f"Failed to fetch hotel data. Error code: {response.status_code}"]
+    
+def create_map(location):
+    geocoding_url = f"https://api.geoapify.com/v1/geocode/search?text={location}&apiKey={geoapify_key}"
+    geo_response = requests.get(geocoding_url)
+    if geo_response.status_code == 200:
+        geo_data = geo_response.json()
+        if geo_data['features']:
+            coordinates = geo_data['features'][0]['geometry']['coordinates']
+            longitude, latitude = coordinates[0], coordinates[1]
+        else:
+            return "Location not found."
+    else:
+        return f"Failed to fetch location data. Error code: {geo_response.status_code}"
+
+    map_ = folium.Map(location=[latitude, longitude], zoom_start=14)
+
+    hotels, hotel_error = get_hotels(location)
+    if not hotel_error:
+        for name, lat, lon in hotels:
+            folium.Marker(popup=name, icon=folium.Icon(icon='bed', color='blue')).add_to(map_)
+
+    restaurants, restaurant_error = get_restaurants(location)
+    if not restaurant_error:
+        for name, lat, lon in restaurants:
+            folium.Marker([lat, lon], popup=name, icon=folium.Icon(icon='cutlery', color='red')).add_to(map_)
+
+    map_html = 'map.html'
+    map_.save(map_html)
+    return map_html
 
 def generate_response(intent, entities, user_response=None, follow_up_stage=0):
     if follow_up_stage == 1:
@@ -150,24 +180,25 @@ def generate_response(intent, entities, user_response=None, follow_up_stage=0):
     elif follow_up_stage == 2:  # After asking about hotels
         if user_response.lower() == "yes":
             location = entities.get('GPE', 'unknown location')
-            hotels_data = get_hotels(location)
-            if hotels_data:
-                hotel_response = "Hotels:\n" + "\n".join(hotels_data)
-                return f"{hotel_response}\nWould you like to see restaurants in {location}? (yes/no)", 3
+            hotels_data, hotel_error = get_hotels(location)
+            if not hotel_error:
+                hotel_response = "Hotels:\n" + "\n".join([name for name, _, _ in hotels_data])
+                map_html = create_map(location)
+                return f"{hotel_response}\nWould you like to see restaurants in {location}? (yes/no)\nMap: {map_html}", 3
             else:
-                return "Sorry, I couldn't find any hotels at that location right now.", 0
+                return f"Sorry, I couldn't find any hotels at that location right now.\n{hotel_error}", 0
         else:
             return "Okay, let me know if there's anything else you'd like to know!", 0
 
     elif follow_up_stage == 3:  # After asking about restaurants
         if user_response.lower() == "yes":
             location = entities.get('GPE', 'unknown location')
-            restaurants_data = get_restaurants(location)
-            if restaurants_data:
-                restaurant_response = "Restaurants:\n" + "\n".join(restaurants_data)
+            restaurants_data, restaurant_error = get_restaurants(location)
+            if not restaurant_error:
+                restaurant_response = "Restaurants:\n" + "\n".join([name for name, _, _ in restaurants_data])
                 return f"{restaurant_response}", 0
             else:
-                return "Sorry, I couldn't find any restaurants at that location right now.", 0
+                return f"Sorry, I couldn't find any restaurants at that location right now.\n{restaurant_error}", 0
         else:
             return "Okay, let me know if there's anything else you'd like to know!", 0
 
@@ -191,21 +222,21 @@ def generate_response(intent, entities, user_response=None, follow_up_stage=0):
 
     elif intent == "restaurant_query":
         location = entities.get('GPE')
-        restaurants_data = get_restaurants(location)
-        if restaurants_data:
-            restaurant_response = "Restaurants:\n" + "\n".join(restaurants_data)
+        restaurants_data, restaurant_error = get_restaurants(location)
+        if not restaurant_error:
+            restaurant_response = "Restaurants:\n" + "\n".join([name for name, _, _ in restaurants_data])
             return f"{restaurant_response}", 0
         else:
-            return "Sorry, I couldn't find any restaurants at that location right now.", 0
+            return f"Sorry, I couldn't find any restaurants at that location right now.\n{restaurant_error}", 0
 
     elif intent == "hotel_query":
         location = entities.get('GPE')
-        hotels_data = get_hotels(location)
-        if hotels_data:
-            hotel_response = "Hotels:\n" + "\n".join(hotels_data)
+        hotels_data, hotel_error = get_hotels(location)
+        if not hotel_error:
+            hotel_response = "Hotels:\n" + "\n".join([name for name, _, _ in hotels_data])
             return f"{hotel_response}", 0
         else:
-            return "Sorry, I couldn't find any hotels at that location right now.", 0
+            return f"Sorry, I couldn't find any hotels at that location right now.\n{hotel_error}", 0
 
     else:
         return "I'm not sure how to help with that.", 0
@@ -220,12 +251,18 @@ def gradio_interface(destination, weather_input, restaurant_input, hotel_input, 
     weather_response, next_stage_weather = "", 0
     restaurant_response, next_stage_restaurant = "", 0
     hotel_response, next_stage_hotel = "", 0
+    map_html = ""
 
     # Process the destination input
     if destination.strip():
         intent = predict_intent(destination)
         entities = extract_entities(destination)
         destination_response, next_stage = generate_response(intent, entities, destination, follow_up_stage)
+
+        # Get the map HTML path from the response
+        if next_stage == 2 and 'map.html' in destination_response:
+            map_html = destination_response.split('Map: ')[-1]
+            destination_response = destination_response.split('Map: ')[0]
 
     # Process the weather input
     if weather_input.strip():
@@ -239,7 +276,7 @@ def gradio_interface(destination, weather_input, restaurant_input, hotel_input, 
     if hotel_input.strip():
         hotel_response, next_stage_hotel = chatbot_response(hotel_input, follow_up_stage)
 
-    return weather_response, restaurant_response, hotel_response
+    return weather_response, restaurant_response, hotel_response, map_html
 
 iface = gr.Interface(
     fn=gradio_interface,
@@ -252,7 +289,8 @@ iface = gr.Interface(
     outputs=[
         gr.Textbox(label="Destination's Weather"),
         gr.Textbox(label="Destination's Restaurants"),
-        gr.Textbox(label="Destination's Hotels")
+        gr.Textbox(label="Destination's Hotels"),
+        gr.HTML(label="Map")  # Added for displaying the map
     ],
     live=True,
     theme="dark",
