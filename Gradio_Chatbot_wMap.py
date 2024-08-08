@@ -205,7 +205,7 @@ def create_map(location):
                 location=[lat, lon],
                 popup=name,
                 icon=folium.Icon(icon='cutlery', color='red')
-            ).add_to(map_
+            ).add_to(map_)
 
     map_html_path = f'map_of_{location}.html'
     map_.save(map_html_path)
